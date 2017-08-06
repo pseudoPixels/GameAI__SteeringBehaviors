@@ -44,7 +44,10 @@ public abstract class MovingEntity : BaseGameEntity {
     {
         this.velocity = newVelocity;
     }
-
+    public float GetSpeed()
+    {
+        return this.velocity.magnitude;
+    }
 
     public Vector2 GetHeading()
     {

@@ -14,12 +14,14 @@ public class SteeringBehavior  {
 	
 
 
-    //================================================
-    //Different Steering Behaviors
-    //================================================
+    //======================================================================
+    //Different Steering Behaviors starts
+    //======================================================================
 
 
-
+    //**********************************************************************
+    //                           Seek
+    //**********************************************************************
     //Seek towards a target 
     public Vector2 Seek(Vector2 targetPosition)
     {
@@ -32,6 +34,13 @@ public class SteeringBehavior  {
     }
 
 
+
+
+
+
+    //**********************************************************************
+    //                           Flee
+    //**********************************************************************
     //Flee from a target, which is just opposite to Seek behavior
     public Vector2 Flee(Vector2 targetPosition)
     {
@@ -44,6 +53,14 @@ public class SteeringBehavior  {
     }
 
 
+
+
+
+
+
+    //**********************************************************************
+    //                           Arrive
+    //**********************************************************************
     //Arrive to the target gently. The arrival can be tuned with second parameter
     //de-acceleration rates: 3=> slow, 2=> normal, 1=> fast
     //TODO: create enemurated list for de_accelerationRate
@@ -78,5 +95,71 @@ public class SteeringBehavior  {
     }
 
 
+
+
+
+
+
+
+
+    //**********************************************************************
+    //                           Pursuit
+    //**********************************************************************
+    //this behavior creates a force that steers the agent towards the 
+    //evader
+    public Vector2 Pursuit(Vehicle evader)
+    {
+        //if the evader is ahead and facing the agent then we can just seek
+        //for the evader's current position.
+        Vector2 toEvader = evader.GetPosition() - this.vehicleAgent.GetPosition();
+
+
+        float relativeHeading = Vector2.Dot(this.vehicleAgent.GetHeading() , evader.GetHeading());
+
+        if (Vector2.Dot(toEvader, this.vehicleAgent.GetHeading()) > 0 && relativeHeading < -0.95)//acos(0.95)=18 degs
+        {
+            return Seek(evader.GetPosition());
+        }
+
+
+        //Not considered ahead so we predict where the evader will be.
+
+        //the lookahead time is propotional to the distance between the evader
+        //and the pursuer; and is inversely proportional to the sum of the
+        //agent's velocities
+        float lookAheadTime = (float)(toEvader.magnitude /
+                              (this.vehicleAgent.GetMaxSpeed() + evader.GetSpeed()));
+
+        //now seek to the predicted future position of the evader
+        return Seek(evader.GetPosition() + evader.GetVelocity() * lookAheadTime);
+     }
+
+
+    //**********************************************************************
+    //                           Evade
+    //**********************************************************************
+    //similar to pursuit except the agent Flees from the estimated future
+    //  position of the pursuer
+    public Vector2 Evade(Vehicle pursuer)
+    {
+        /* Not necessary to include the check for facing direction this time */
+        Vector2 toPursuer = pursuer.GetPosition() - this.vehicleAgent.GetPosition();
+
+        //uncomment the following two lines to have Evade only consider pursuers 
+        //within a 'threat range'
+        float threatRange = 100.0f;
+        if (toPursuer.magnitude > threatRange) return new Vector2(0,0);
+
+        //the lookahead time is propotional to the distance between the pursuer
+        //and the pursuer; and is inversely proportional to the sum of the
+        //agents' velocities
+        float lookAheadTime = (float)(toPursuer.magnitude / (this.vehicleAgent.GetMaxSpeed() + pursuer.GetSpeed()));
+        
+        //now flee away from predicted future position of the pursuer
+        return Flee(pursuer.GetPosition() + pursuer.GetVelocity() * lookAheadTime);
+
+    }
+
+    
 
 }
